@@ -21,7 +21,6 @@ def funcionarios():
             # Inserção no banco com tratamento de erro
             try:
                 supabase.table('funcionarios').insert({
-                    "id": str(uuid.uuid4()),
                     "nome": nome,
                     "cargo": cargo,
                     "created_at": datetime.now().isoformat(),

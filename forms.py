@@ -16,7 +16,7 @@ class RegistroHoraForm(FlaskForm):
     data_trabalho = DateField('Data', validators=[DataRequired()], format='%Y-%m-%d')
     hora_entrada = TimeField('Entrada', validators=[DataRequired()])
     hora_almoco_saida = TimeField('Saída Almoço', validators=[Optional()], default=datetime.strptime('12:00', '%H:%M').time())
-    hora_almoco_volta = TimeField('Volta Almoço', validators=[Optional()], default=datetime.strptime('13:12', '%H:%M').time())
+    hora_almoco_volta = TimeField('Volta Almoço', validators=[Optional()], default=datetime.strptime('13:00', '%H:%M').time())
     hora_saida = TimeField('Saída', validators=[DataRequired()])
     observacoes = TextAreaField('Observações', validators=[Optional()])
 

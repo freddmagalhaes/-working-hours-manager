@@ -120,14 +120,7 @@ class DashboardService:
         }
 
         for i in range(5, -1, -1):
-            data_ref = mes_referencia - timedelta(days=30*i) # Aproximacao de mes
-            # Ajuste melhor para pegar o mes correto
-            # Se for hoje fev/2024. 
-            # i=0 -> fev. i=1 -> jan.
-            # Logica original usava dias=30 fixe, o que causa drift. Mas vamos manter ou corrigir?
-            # Melhor corrigir levemente a logica de "meses atras"
-            
-            # Vamos fazer direito:
+            # Lógica corrigida de "meses atrás" evitando o drift de 30 dias do timedelta
             year = mes_referencia.year
             month = mes_referencia.month - i
             while month <= 0:

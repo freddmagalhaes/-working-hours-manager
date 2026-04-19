@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, time
+from core_config import CoreConfig
 
 def to_time(hhmm):
     return datetime.strptime(hhmm, "%H:%M").time() if hhmm else None
@@ -9,35 +10,64 @@ def calcular_horas(entrada, almoco_saida, almoco_volta, saida):
     almoco_saida = to_time(almoco_saida)
     almoco_volta = to_time(almoco_volta)
 
-    dt_hoje = datetime.today()
+    # Base references
+    dt_hoje = datetime(2000, 1, 1) # Usamos uma data neutra
     dt_entrada = datetime.combine(dt_hoje, entrada)
     dt_saida = datetime.combine(dt_hoje, saida)
-    # Se a saída for menor ou igual à entrada, considera que passou da meia-noite
+    
+    # Se a saída for menor ou igual à entrada, passou da meia-noite
     if saida and entrada and dt_saida <= dt_entrada:
         dt_saida += timedelta(days=1)
 
-    total = dt_saida - dt_entrada
+    total_bruto = dt_saida - dt_entrada
 
+    # Calcula intervalo
     intervalo = timedelta()
     if almoco_saida and almoco_volta:
         dt_almoco_saida = datetime.combine(dt_hoje, almoco_saida)
         dt_almoco_volta = datetime.combine(dt_hoje, almoco_volta)
-        # Se o retorno do almoço for menor que a saída para o almoço, passou da meia-noite
+        
+        # Ajuste para caso o almoço passe da meia noite (incomum, mas possível para plantonistas)
+        if dt_almoco_saida < dt_entrada:
+            dt_almoco_saida += timedelta(days=1)
         if dt_almoco_volta <= dt_almoco_saida:
             dt_almoco_volta += timedelta(days=1)
+            
         intervalo = dt_almoco_volta - dt_almoco_saida
 
-    trabalho_liquido = total - intervalo
+    # Horas trabalhadas descontando intervalo
+    trabalho_liquido = total_bruto - intervalo
+    
+    # Constante da Jornada (8h por exemplo)
+    jornada = timedelta(hours=CoreConfig.JORNADA_DIARIA_HORAS)
+    
+    horas_normais = min(trabalho_liquido, jornada)
+    horas_extras = max(trabalho_liquido - jornada, timedelta(0))
 
-    horas_normais = min(trabalho_liquido, timedelta(hours=12))
-    # Ajuste para considerar horas extras e adicional noturno após a meia-noite
-    dt_20h = datetime.combine(dt_hoje, time(20, 0))
-    dt_22h = datetime.combine(dt_hoje, time(22, 0))
-    if dt_saida <= dt_entrada:
-        dt_20h += timedelta(days=1)
-        dt_22h += timedelta(days=1)
-    horas_extras = max(dt_saida - dt_20h, timedelta(0))
-    adicional_noturno = max(dt_saida - dt_22h, timedelta(0))
+    # Cálculo do adicional noturno (22:00 até 05:00)
+    # Precisamos iterar pelos minutos trabalhados (menos o intervalo) para cruzar a faixa noturna
+    # Simplificação: verificar todos os minutos da entrada até a saída
+    adicional_noturno_minutos = 0
+    current_dt = dt_entrada
+    
+    # Calcula os bounds dos intervalos para não contar o almoço no adicional noturno
+    is_in_break = False
+    
+    while current_dt < dt_saida:
+        # Checa se está no horário de pausa
+        if almoco_saida and almoco_volta:
+            if dt_almoco_saida <= current_dt < dt_almoco_volta:
+                current_dt += timedelta(minutes=1)
+                continue
+                
+        # Checa se o horário atual é noturno (>= 22:00 ou < 05:00)
+        h = current_dt.hour
+        if h >= 22 or h < 5:
+            adicional_noturno_minutos += 1
+            
+        current_dt += timedelta(minutes=1)
+
+    adicional_noturno = timedelta(minutes=adicional_noturno_minutos)
 
     def to_decimal(td):
         return round(td.total_seconds() / 3600, 2)

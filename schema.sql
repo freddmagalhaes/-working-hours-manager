@@ -1,6 +1,9 @@
+-- Extensão necessária para geração de UUID
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Tabela de funcionários
 CREATE TABLE IF NOT EXISTS funcionarios (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     nome VARCHAR(100) NOT NULL,
     cargo VARCHAR(100),
     ativo BOOLEAN DEFAULT true,
@@ -10,8 +13,8 @@ CREATE TABLE IF NOT EXISTS funcionarios (
 
 -- Tabela de registros de horas
 CREATE TABLE IF NOT EXISTS registros_horas (
-    id SERIAL PRIMARY KEY,
-    funcionario_id INTEGER REFERENCES funcionarios(id),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    funcionario_id UUID REFERENCES funcionarios(id),
     data_trabalho DATE NOT NULL,
     hora_entrada TIME NOT NULL,
     hora_saida TIME NOT NULL,

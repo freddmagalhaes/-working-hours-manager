@@ -6,6 +6,7 @@ import uuid
 import logging
 from utils.calculadora_horas import calcular_horas
 from forms import RegistroHoraForm
+from core_config import CoreConfig
 
 logger = logging.getLogger(__name__)
 registros_bp = Blueprint('registros', __name__)
@@ -80,7 +81,6 @@ def registros():
             # Inserção no banco
             try:
                 supabase.table('registros_horas').insert({
-                    "id": str(uuid.uuid4()),
                     "funcionario_id": funcionario_id,
                     "data_trabalho": data_trabalho,
                     "hora_entrada": hora_entrada_str,
@@ -312,8 +312,8 @@ def verificar_horas_extras(funcionario_id, mes_ano):
         # Calcula total de horas extras
         total_horas_extras = sum(float(r['horas_extras'] or 0) for r in registros)
         
-        # Limite de horas extras (exemplo: 40 horas por mês)
-        LIMITE_HORAS_EXTRAS = 40
+        # Limite de horas extras
+        LIMITE_HORAS_EXTRAS = CoreConfig.LIMITE_HORAS_EXTRAS_MENSAL
         
         if total_horas_extras > LIMITE_HORAS_EXTRAS:
             # Busca dados do funcionário
